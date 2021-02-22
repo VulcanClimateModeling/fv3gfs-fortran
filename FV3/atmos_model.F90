@@ -127,6 +127,8 @@ implicit none
 private
 
 public update_atmos_radiation_physics
+public update_atmos_radiation
+public update_atmos_physics
 public update_atmos_model_state
 public update_atmos_model_dynamics
 public atmos_model_init, atmos_model_end, atmos_data_type
@@ -258,16 +260,26 @@ contains
 ! </INOUT>
 
 subroutine update_atmos_radiation_physics (Atmos)
-#ifdef OPENMP
-    use omp_lib
-#endif
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------
   type (atmos_data_type), intent(in) :: Atmos
-!--- local variables---
-    integer :: nb, jdat(8), rc
-    procedure(IPD_func0d_proc), pointer :: Func0d => NULL()
-    procedure(IPD_func1d_proc), pointer :: Func1d => NULL()
-    integer :: nthrds
+
+  call update_atmos_radiation(Atmos)
+  call update_atmos_physics(Atmos)
+!-----------------------------------------------------------------------
+ end subroutine update_atmos_radiation_physics
+! </SUBROUTINE>
+
+ subroutine update_atmos_radiation(Atmos)
+#ifdef OPENMP
+     use omp_lib
+#endif
+   type (atmos_data_type), intent(in) :: Atmos
+
+   integer :: nb, jdat(8), rc
+   procedure(IPD_func0d_proc), pointer :: Func0d => NULL()
+   procedure(IPD_func1d_proc), pointer :: Func1d => NULL()
+   integer :: nthrds
+
 #ifdef CCPP
     integer :: ierr
 #endif
@@ -378,8 +390,22 @@ subroutine update_atmos_radiation_physics (Atmos)
         call FV3GFS_IPD_checksum(IPD_Control, IPD_Data, Atm_block)
       endif
       call mpp_clock_end(otherClock)
+    endif
 
-      if (mpp_pe() == mpp_root_pe() .and. debug) write(6,*) "physics driver"
+ end subroutine update_atmos_radiation
+
+ subroutine update_atmos_physics(Atmos)
+   type (atmos_data_type), intent(in) :: Atmos
+
+   integer :: nb
+   procedure(IPD_func0d_proc), pointer :: Func0d => NULL()
+
+#ifdef CCPP
+    integer :: ierr
+#endif
+  
+  if (.not. dycore_only) then
+  if (mpp_pe() == mpp_root_pe() .and. debug) write(6,*) "physics driver"
 
 !--- execute the IPD atmospheric physics step1 subcomponent (main physics driver)
 
@@ -435,15 +461,12 @@ subroutine update_atmos_radiation_physics (Atmos)
       if (mpp_pe() == mpp_root_pe() .and. debug) write(6,*) "end of radiation and physics step"
       call mpp_clock_end(otherClock)
     endif
-
 #ifdef CCPP
     ! Update flag for first time step of time integration
     IPD_Control%first_time_step = .false.
 #endif
-!-----------------------------------------------------------------------
- end subroutine update_atmos_radiation_physics
-! </SUBROUTINE>
 
+ end subroutine update_atmos_physics
 
 !#######################################################################
 ! <SUBROUTINE NAME="atmos_model_init">
