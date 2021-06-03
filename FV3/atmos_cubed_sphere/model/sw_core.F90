@@ -665,7 +665,7 @@
       integer :: isd, ied, jsd, jed
       integer :: npx, npy
       logical :: nested,regional
-      !$ser on
+      
       !$ser verbatim integer :: mpi_rank,ier
       !$ser verbatim integer :: nz, dir
       !$ser verbatim real, dimension(1,1) :: damp_v_dup, nord_v_dup, nord_dup, nord_w_dup, damp4_dup, d2_bg_dup
