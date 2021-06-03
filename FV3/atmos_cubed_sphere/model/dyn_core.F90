@@ -539,8 +539,10 @@ contains
 !$OMP parallel do default(none) shared(npz,isd,jsd,delpc,delp,ptc,pt,u,v,w,uc,vc,ua,va, &
 !$OMP                                  omga,ut,vt,divgd,flagstruct,dt2,hydrostatic,bd,  &
 !$OMP                                  gridstruct)
-      do k=1,npz
-         !$ser verbatim call set_k(k)
+     do k=1,npz
+
+        !$ser verbatim call set_k(k)
+        
          call c_sw(delpc(isd,jsd,k), delp(isd,jsd,k),  ptc(isd,jsd,k),    &
                       pt(isd,jsd,k),    u(isd,jsd,k),    v(isd,jsd,k),    &
                        w(isd:,jsd:,k),   uc(isd,jsd,k),   vc(isd,jsd,k),    &
@@ -793,8 +795,10 @@ contains
 !$OMP                                  heat_source,diss_est,ptop,first_call)                                      &
 !$OMP                          private(nord_k, nord_w, nord_t, damp_w, damp_t, d2_divg,   &
 !$OMP                          d_con_k,kgb, hord_m, hord_v, hord_t, hord_p, wk, heat_s,diss_e, z_rat)
-    do k=1,npz
-       !$ser verbatim call set_k(k)
+do k=1,npz
+                                                        !$ser on
+                                                        !$ser verbatim call set_k(k)
+                                                        !$ ser off
        hord_m = flagstruct%hord_mt
        hord_t = flagstruct%hord_tm
        hord_v = flagstruct%hord_vt
@@ -959,7 +963,9 @@ contains
     enddo           ! end openMP k-loop
     !$ser savepoint D_SW-Out
     !$ser data delpcd=vt delpd=delp ptcd=ptc ptd=pt ud=u vd=v wd=w ucd=uc vcd=vc uad=ua vad=va divgdd=divgd mfxd=mfx mfyd=mfy cxd=cx cyd=cy crxd=crx cryd=cry xfxd=xfx yfxd=yfx q_cond=q_con heat_sourced=heat_source diss_estd=diss_est nord_vd=nord_v damp_vtd=damp_vt
+    !$ser on
     !$ser verbatim call finalize_kbuff()
+    !$ser off
     if (flagstruct%regional) then
        call exch_uv(domain, bd, npz, vc, uc)
        call exch_uv(domain, bd, npz, u,  v )
